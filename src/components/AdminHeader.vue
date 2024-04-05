@@ -1,11 +1,72 @@
+<script setup>
+import { ref, watch } from 'vue';
+import constant from '../constant/Const'
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+
+axios.defaults.withCredentials = true;
+const router = useRouter();
+
+const adminName = ref('');
+const showLogout = ref(false);
+let URL_PATH = document.URL;
+let ADMIN_HOME_PATH = "http://localhost:5173/admin/home";
+
+const checkAdminSession = () => {
+    if (URL_PATH === ADMIN_HOME_PATH) {
+        console.log("ADMIN PANEL | validating session in admin panel. ");
+
+        axios.get(constant.ADMIN_PROFILE).then((response) => {
+            if (response.status === 200) {
+                // todo : toast
+                adminName.value = response.data.firstName + " " + response.data.lastName;
+                showLogout.value = true;
+                console.log("ADMIN PANEL | validating session in admin panel successful. ");
+            } else {
+                // todo : toast
+                router.push('/admin');
+            }
+        }).catch((error) => {
+            // todo : toast
+            router.push('/admin');
+            console.error(error);
+        });
+    }
+}
+
+const adminLogout = () => {
+    console.log("ADMIN PANEL | logout initiated. ");
+
+    axios.get(constant.ADMIN_LOGOUT).then((response) => {
+        if (response.status === 200) {
+            console.log("ADMIN PANEL | logout successful. ");
+            // todo : toast
+            router.push('/admin');
+        } else {
+            // todo : toast
+        }
+    }).catch((error) => {
+        // todo : toast
+        console.error(error);
+    });
+}
+
+checkAdminSession();
+
+
+</script>
+
+
+
+
 <template>
 
     <div class="navbar-container">
         <div class="navbar">
             <div class="nav">
-                <p class="nav-text">Arjun Shaji</p>
+                <p class="nav-text">{{ adminName }}</p>
                 <p class="nav-text">Ente Bus App | Admin Panel</p>
-                <p class="nav-text">Logout</p>
+                <p class="nav-text" @click="adminLogout" v-if="showLogout">Logout</p>
             </div>
         </div>
     </div>

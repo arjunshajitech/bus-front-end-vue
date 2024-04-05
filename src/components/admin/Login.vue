@@ -1,4 +1,36 @@
 <script setup>
+import { ref, watch } from 'vue';
+import axios from 'axios';
+import constant from '../../constant/Const'
+import { useRouter } from 'vue-router';
+
+axios.defaults.withCredentials = true;
+const router = useRouter();
+
+const adminLoginRequest = {
+    emailOrPhone: 'admin@admin.com',
+    password: 'Password@1'
+}
+
+const adminLogin = () => {
+    console.log("ADMIN PANEL | login in admin panel. ");
+
+    axios.post(constant.ADMIN_LOGIN_URL, adminLoginRequest).then((response) => {
+        if (response.status === 200) {
+            // tosat
+            console.log("ADMIN PANEL | login in admin panel successful. ");
+            router.push('/admin/home');
+        } else {
+            // toast
+        }
+
+    }).catch((error) => {
+        // toast
+        router.push('/admin');
+        console.error(error);
+    });
+}
+
 
 </script>
 
@@ -11,15 +43,15 @@
                 <div class="input-container">
                     <div class="input">
                         <label class="input-text">Email</label>
-                        <input class="input-field" type="email">
+                        <input class="input-field" v-model="adminLoginRequest.emailOrPhone" type="email">
                     </div>
                     <div class="input">
                         <label class="input-text">Password</label>
-                        <input class="input-field" type="password">
+                        <input class="input-field" v-model="adminLoginRequest.password" type="password">
                     </div>
                 </div>
                 <div class="btn-container">
-                    <button class="login-btn">Create</button>
+                    <button class="login-btn" @click="adminLogin()">Continue</button>
                 </div>
             </div>
         </div>
@@ -28,7 +60,6 @@
 </template>
 
 <style scoped>
-
 .form-container {
     width: 100%;
     margin-top: 70px;

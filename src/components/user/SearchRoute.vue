@@ -13,7 +13,7 @@
                         <input class="input-field" placeholder="Muhamma, Alappuzha, Mannamcherry ...." type="text">
                     </div>
                     <div class="btn-container">
-                        <button class="login-btn">Search bus</button>
+                        <button class="login-btn">Search</button>
                     </div>
                 </div>
             </div>

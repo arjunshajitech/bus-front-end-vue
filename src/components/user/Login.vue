@@ -19,7 +19,7 @@
                     </div>
                 </div>
                 <div class="btn-container">
-                    <button class="login-btn">Create</button>
+                    <button class="login-btn">Continue</button>
                 </div>
                 <router-link to="/signup" class="link">Create an account ?</router-link>
             </div>

@@ -1,21 +1,91 @@
 <script setup>
-import { ref } from 'vue'
-const ListBusOwner = ref(true);
-const listBgColor = ref('rgb(134, 211, 66)')
-const createBgColor = ref('');
+import { ref, watch } from 'vue';
+import axios from 'axios';
+import constant from '../../constant/Const'
+import { useRouter } from 'vue-router';
+
+axios.defaults.withCredentials = true;
+const router = useRouter();
 
 
-const switchBody = (val) => {
-    if (val === 'list') {
-        ListBusOwner.value = true;
-        createBgColor.value = '';
-        listBgColor.value = 'rgb(134, 211, 66)';
+const busOwnersDetails = ref([]);
+const switchDiv = ref('');
+const busOwnerListBgColor = ref('rgb(134, 211, 66)');
+const createBusOwnerBgColor = ref('');
+const busList = 'list_bus';
+const createBus = 'create_bus';
+const createBusOwnerRequest = {
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    password: ''
+}
+
+const getAllBusOwners = () => {
+    axios.get(constant.ADMIN_GET_BUS_OWNERS).then((response) => {
+        if (response.status === 200) {
+            // todo : toast
+            if (response.data.length > 0) {
+                switchDiv.value = 'show_bus_owners';
+                busOwnersDetails.value = response.data;
+            } else {
+                switchDiv.value = 'no_data_found';
+            }
+        } else {
+            // todo : toast
+        }
+    }).catch((error) => {
+        // todo : toast
+        console.error(error);
+    });
+}
+
+const switchAdminHomeBody = (status) => {
+    if (status === busList) {
+        busOwnerListBgColor.value = 'rgb(134, 211, 66)'
+        createBusOwnerBgColor.value = ''
+        getAllBusOwners();
     } else {
-        ListBusOwner.value = false;
-        listBgColor.value = '';
-        createBgColor.value = 'rgb(134, 211, 66)';
+        busOwnerListBgColor.value = ''
+        createBusOwnerBgColor.value = 'rgb(134, 211, 66)'
+        switchDiv.value = 'create_bus_owner'
     }
 }
+
+const deleteBusOwner = (id) => {
+    const confirmation = confirm('Are you sure you want to delete bus owner?');
+    if (confirmation) {
+        axios.delete(constant.ADMIN_DEL_BUS_OWNERS + "/" + id).then((response) => {
+            if (response.status === 200) {
+                // todo : toast
+                window.location.reload();
+            } else {
+                // todo : toast
+            }
+        }).catch((error) => {
+            // todo : toast
+            console.error(error);
+        });
+    }
+}
+
+const createBusOnwer = () => {
+    axios.post(constant.ADMIN_CREATE_BUS_OWNER, createBusOwnerRequest).then((response) => {
+        if (response.status === 200) {
+            // tosat
+            window.location.reload();
+        } else {
+            // toast
+        }
+
+    }).catch((error) => {
+        // toast
+        console.error(error);
+    });
+}
+
+getAllBusOwners();
 
 </script>
 
@@ -23,13 +93,23 @@ const switchBody = (val) => {
 
     <div class="nav-container">
         <div class="nav">
-            <button :style="{ backgroundColor: listBgColor }" @click="switchBody('list')" class="login-btn btn">List Bus
+            <button :style="{ backgroundColor: busOwnerListBgColor }" @click="switchAdminHomeBody(busList)"
+                class="login-btn btn">List Bus
                 Owners</button>
-            <button :style="{ backgroundColor: createBgColor }" @click="switchBody('create')" class="login-btn btn">Create Bus Owner</button>
+            <button :style="{ backgroundColor: createBusOwnerBgColor }" @click="switchAdminHomeBody(createBus)"
+                class="login-btn btn">Create Bus Owner</button>
         </div>
     </div>
 
-    <div v-if="ListBusOwner" class="form-container" id="create-bus">
+    <div v-if="switchDiv == 'no_data_found'" class="form-container" id="create-bus">
+        <div class="list-body">
+            <div class="list-container">
+                <p class="empty-text">Bus Owners is Empty!</p>
+            </div>
+        </div>
+    </div>
+
+    <div v-else-if="switchDiv == 'show_bus_owners'" class="form-container" id="create-bus">
         <div class="list-body">
             <div class="list-container">
                 <table>
@@ -45,23 +125,14 @@ const switchBody = (val) => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Arjun</td>
-                            <td>Shaji</td>
-                            <td>arjun@gmail.com</td>
-                            <td>7788778877</td>
+                        <tr v-for="owner in busOwnersDetails">
+                            <td>{{ owner.firstName }}</td>
+                            <td>{{ owner.lastName }}</td>
+                            <td>{{ owner.email }}</td>
+                            <td>{{ owner.phone }}</td>
                             <td>************</td>
                             <!-- <td><button class="edit-btn">Edit</button></td> -->
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-                            <td>Arjun</td>
-                            <td>Shaji</td>
-                            <td>arjun@gmail.com</td>
-                            <td>7788778877</td>
-                            <td>************</td>
-                            <!-- <td><button class="edit-btn">Edit</button></td> -->
-                            <td><button class="delete-btn">Delete</button></td>
+                            <td><button class="delete-btn" @click="deleteBusOwner(owner.id)">Delete</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -77,30 +148,30 @@ const switchBody = (val) => {
                     <div class="input-box">
                         <div class="input">
                             <label class="input-text">First name</label>
-                            <input class="input-field" type="text">
+                            <input v-model="createBusOwnerRequest.firstName" class="input-field" type="text">
                         </div>
                         <div class="input">
                             <label class="input-text">Last name</label>
-                            <input class="input-field" type="text">
+                            <input v-model="createBusOwnerRequest.lastName" class="input-field" type="text">
                         </div>
                     </div>
                     <div class="input-box">
                         <div class="input">
                             <label class="input-text">Phone</label>
-                            <input class="input-field" type="text">
+                            <input v-model="createBusOwnerRequest.phone" class="input-field" type="text">
                         </div>
                         <div class="input">
                             <label class="input-text">Email</label>
-                            <input class="input-field" type="email">
+                            <input v-model="createBusOwnerRequest.email" class="input-field" type="email">
                         </div>
                     </div>
                     <div class="input-box">
                         <div class="input">
                             <label class="input-text">Password</label>
-                            <input class="input-field" type="password">
+                            <input v-model="createBusOwnerRequest.password" class="input-field" type="password">
                         </div>
                         <div class="btn-container">
-                            <button class="login-btn">Create</button>
+                            <button @click="createBusOnwer()" class="login-btn">Create</button>
                         </div>
                     </div>
                 </div>
@@ -118,6 +189,11 @@ th {
 
 td {
     padding: 20px 60px 10px 60px;
+}
+
+.empty-text {
+    font-size: 40px;
+    padding-top: 160px;
 }
 
 .list-container {

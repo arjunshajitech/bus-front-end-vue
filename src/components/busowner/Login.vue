@@ -1,4 +1,12 @@
 <script setup>
+import { ref } from 'vue';
+
+const loginRequest = ref({
+    "emailOrPhone": "",
+    "password": ""
+})
+
+
 
 </script>
 
@@ -10,16 +18,16 @@
                 <p class="login-text">Bus Owner Login</p>
                 <div class="input-container">
                     <div class="input">
-                        <label class="input-text">Email</label>
-                        <input class="input-field" type="email">
+                        <label class="input-text">Email {{ loginRequest.emailOrPhone }}</label>
+                        <input class="input-field" v.mode="loginRequest.emailOrPhone" type="email">
                     </div>
                     <div class="input">
-                        <label class="input-text">Password</label>
-                        <input class="input-field" type="password">
+                        <label class="input-text">Password {{ loginRequest.password }}</label>
+                        <input v-model="loginRequest.password" class="input-field" type="password">
                     </div>
                 </div>
                 <div class="btn-container">
-                    <button class="login-btn">Create</button>
+                    <button class="login-btn">Continue</button>
                 </div>
             </div>
         </div>
@@ -28,7 +36,6 @@
 </template>
 
 <style scoped>
-
 .form-container {
     width: 100%;
     margin-top: 70px;
