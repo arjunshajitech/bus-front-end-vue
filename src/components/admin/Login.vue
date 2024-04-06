@@ -3,33 +3,86 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import constant from '../../constant/Const'
 import { useRouter } from 'vue-router';
+import toast from '../../toast/toast'
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/yup';
+import * as yup from 'yup';
 
 axios.defaults.withCredentials = true;
 const router = useRouter();
 
-const adminLoginRequest = {
-    emailOrPhone: 'admin@admin.com',
-    password: 'Password@1'
+const { errors, defineField, validate } = useForm({
+    validationSchema: toTypedSchema(
+        yup.object({
+            email: yup.string().email().required(),
+            password: yup.string().min(6).required(),
+        }),
+    ),
+});
+
+const [email, emailAttrs] = defineField('email');
+const [password, passwordAttrs] = defineField('password');
+
+const emailInputBorderColor = ref('rgb(134, 211, 66)');
+const passwordInputBorderColor = ref('rgb(134, 211, 66)');
+
+watch(email, () => {
+    if (typeof errors.value.email !== 'undefined') {
+        emailInputBorderColor.value = 'rgb(211, 66, 66)';
+    } else {
+        emailInputBorderColor.value = 'rgb(134, 211, 66)';
+    }
+})
+
+watch(password, () => {
+    if (typeof errors.value.password !== 'undefined') {
+        passwordInputBorderColor.value = 'rgb(211, 66, 66)';
+    } else {
+        passwordInputBorderColor.value = 'rgb(134, 211, 66)';
+    }
+})
+
+const updateErrorBorderColor = () => {
+    passwordInputBorderColor.value = 'rgb(211, 66, 66)';
+    emailInputBorderColor.value = 'rgb(211, 66, 66)';
 }
 
-const adminLogin = () => {
-    console.log("ADMIN PANEL | login in admin panel. ");
 
-    axios.post(constant.ADMIN_LOGIN_URL, adminLoginRequest).then((response) => {
-        if (response.status === 200) {
-            // tosat
-            console.log("ADMIN PANEL | login in admin panel successful. ");
-            router.push('/admin/home');
-        } else {
-            // toast
-        }
+const adminLogin = async () => {
 
+    const isLoginForm = await validate();
+    if (isLoginForm.valid) {
+        axios.post(constant.ADMIN_LOGIN_URL, {
+            emailOrPhone: email.value,
+            password: password.value
+        }).then((response) => {
+            if (response.status === 200) {
+                toast.success('Login Success.')
+                router.push('/admin/home');
+            } else {
+                toast.warning('Something went wrong')
+            }
+
+        }).catch((error) => {
+            toast.error('Incorrect email or password.')
+            router.push('/admin');
+            console.error(error);
+        });
+    } else {
+        toast.error('Invalid email or password')
+        updateErrorBorderColor();
+    }
+
+}
+
+const adminLogout = () => {
+    axios.get(constant.ADMIN_LOGOUT).then((response) => {
     }).catch((error) => {
-        // toast
-        router.push('/admin');
         console.error(error);
     });
 }
+
+adminLogout();
 
 
 </script>
@@ -42,12 +95,14 @@ const adminLogin = () => {
                 <p class="login-text">Admin Login</p>
                 <div class="input-container">
                     <div class="input">
-                        <label class="input-text">Email</label>
-                        <input class="input-field" v-model="adminLoginRequest.emailOrPhone" type="email">
+                        <label class="input-text" :style="{ color: emailInputBorderColor }">Email</label>
+                        <input class="input-field" type="text" v-model="email" v-bind="emailAttrs"
+                            :style="{ borderColor: emailInputBorderColor }" />
                     </div>
                     <div class="input">
-                        <label class="input-text">Password</label>
-                        <input class="input-field" v-model="adminLoginRequest.password" type="password">
+                        <label class="input-text" :style="{ color: passwordInputBorderColor }">Password</label>
+                        <input :style="{ borderColor: passwordInputBorderColor }" class="input-field" v-model="password"
+                            v-bind="passwordAttrs" type="password">
                     </div>
                 </div>
                 <div class="btn-container">
@@ -122,7 +177,7 @@ const adminLogin = () => {
 .input-field {
     width: 400px;
     height: 50px;
-    border: 1px solid rgb(134, 211, 66);
+    border: 1px solid;
     outline: none;
     border-radius: 6px;
     padding-left: 20px;

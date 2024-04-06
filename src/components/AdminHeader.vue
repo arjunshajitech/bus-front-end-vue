@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import constant from '../constant/Const'
+import toast from '../toast/toast'
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 
@@ -14,20 +15,15 @@ let ADMIN_HOME_PATH = "http://localhost:5173/admin/home";
 
 const checkAdminSession = () => {
     if (URL_PATH === ADMIN_HOME_PATH) {
-        console.log("ADMIN PANEL | validating session in admin panel. ");
 
         axios.get(constant.ADMIN_PROFILE).then((response) => {
             if (response.status === 200) {
-                // todo : toast
                 adminName.value = response.data.firstName + " " + response.data.lastName;
                 showLogout.value = true;
-                console.log("ADMIN PANEL | validating session in admin panel successful. ");
             } else {
-                // todo : toast
                 router.push('/admin');
             }
         }).catch((error) => {
-            // todo : toast
             router.push('/admin');
             console.error(error);
         });
@@ -35,18 +31,16 @@ const checkAdminSession = () => {
 }
 
 const adminLogout = () => {
-    console.log("ADMIN PANEL | logout initiated. ");
 
     axios.get(constant.ADMIN_LOGOUT).then((response) => {
         if (response.status === 200) {
-            console.log("ADMIN PANEL | logout successful. ");
-            // todo : toast
+            toast.success('Logout Success.')
             router.push('/admin');
         } else {
-            // todo : toast
+            toast.warning('Something went wrong')
         }
     }).catch((error) => {
-        // todo : toast
+        toast.warning('Something went wrong')
         console.error(error);
     });
 }

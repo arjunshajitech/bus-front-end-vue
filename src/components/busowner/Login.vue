@@ -1,11 +1,42 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import axios from 'axios';
+import constant from '../../constant/Const'
+import { useRouter } from 'vue-router';
 
-const loginRequest = ref({
-    "emailOrPhone": "",
-    "password": ""
-})
+axios.defaults.withCredentials = true;
+const router = useRouter();
 
+const busownerLoginRequest = {
+    emailOrPhone: '',
+    password: ''
+}
+
+const busOwnerLogin = () => {
+
+    axios.post(constant.BUSOWNER_LOGIN_URL, busownerLoginRequest).then((response) => {
+        if (response.status === 200) {
+            // tosat
+            router.push('/busowner/home');
+        } else {
+            // toast
+        }
+
+    }).catch((error) => {
+        // toast
+        router.push('/busowner');
+        console.error(error);
+    });
+}
+
+const adminLogout = () => {
+    axios.get(constant.BUSOWNER_LOGOUT).then((response) => {
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
+adminLogout();
 
 
 </script>
@@ -18,16 +49,16 @@ const loginRequest = ref({
                 <p class="login-text">Bus Owner Login</p>
                 <div class="input-container">
                     <div class="input">
-                        <label class="input-text">Email {{ loginRequest.emailOrPhone }}</label>
-                        <input class="input-field" v.mode="loginRequest.emailOrPhone" type="email">
+                        <label class="input-text">Email</label>
+                        <input class="input-field" v-model="busownerLoginRequest.emailOrPhone" type="email">
                     </div>
                     <div class="input">
-                        <label class="input-text">Password {{ loginRequest.password }}</label>
-                        <input v-model="loginRequest.password" class="input-field" type="password">
+                        <label class="input-text">Password</label>
+                        <input v-model="busownerLoginRequest.password" class="input-field" type="password">
                     </div>
                 </div>
                 <div class="btn-container">
-                    <button class="login-btn">Continue</button>
+                    <button class="login-btn" @click="busOwnerLogin()">Continue</button>
                 </div>
             </div>
         </div>

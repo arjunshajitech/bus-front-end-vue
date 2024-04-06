@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import constant from '../../constant/Const'
 import { useRouter } from 'vue-router';
+import toast from '../../toast/toast'
 
 axios.defaults.withCredentials = true;
 const router = useRouter();
@@ -25,18 +26,14 @@ const createBusOwnerRequest = {
 const getAllBusOwners = () => {
     axios.get(constant.ADMIN_GET_BUS_OWNERS).then((response) => {
         if (response.status === 200) {
-            // todo : toast
             if (response.data.length > 0) {
                 switchDiv.value = 'show_bus_owners';
                 busOwnersDetails.value = response.data;
             } else {
                 switchDiv.value = 'no_data_found';
             }
-        } else {
-            // todo : toast
         }
     }).catch((error) => {
-        // todo : toast
         console.error(error);
     });
 }
@@ -58,13 +55,13 @@ const deleteBusOwner = (id) => {
     if (confirmation) {
         axios.delete(constant.ADMIN_DEL_BUS_OWNERS + "/" + id).then((response) => {
             if (response.status === 200) {
-                // todo : toast
-                window.location.reload();
+                toast.success("Bus owner deleted.")
+                getAllBusOwners();
             } else {
-                // todo : toast
+                toast.warning('Something went wrong')
             }
         }).catch((error) => {
-            // todo : toast
+            toast.warning('Something went wrong')
             console.error(error);
         });
     }
@@ -73,14 +70,17 @@ const deleteBusOwner = (id) => {
 const createBusOnwer = () => {
     axios.post(constant.ADMIN_CREATE_BUS_OWNER, createBusOwnerRequest).then((response) => {
         if (response.status === 200) {
-            // tosat
-            window.location.reload();
+            toast.success("Bus owner created.")
+            switchAdminHomeBody(busList);
+            getAllBusOwners();
+            for (let key in createBusOwnerRequest) {
+                createBusOwnerRequest[key] = '';
+            }
         } else {
-            // toast
+            toast.warning('Something went wrong')
         }
-
     }).catch((error) => {
-        // toast
+        toast.error('Bus owner already exists.')
         console.error(error);
     });
 }
@@ -189,6 +189,10 @@ th {
 
 td {
     padding: 20px 60px 10px 60px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .empty-text {
