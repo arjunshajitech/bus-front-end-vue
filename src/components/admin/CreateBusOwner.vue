@@ -4,10 +4,34 @@ import axios from 'axios';
 import constant from '../../constant/Const'
 import { useRouter } from 'vue-router';
 import toast from '../../toast/toast'
+import { useForm } from 'vee-validate';
+import * as yup from 'yup';
 
 axios.defaults.withCredentials = true;
 const router = useRouter();
 
+const { errors, defineField, validate } = useForm({
+    validationSchema: yup.object({
+        email: yup.string().email().required(),
+        password: yup.string().min(6).required(),
+        firstName: yup.string().min(3).required(),
+        lastName: yup.string().min(1).required(),
+        phone: yup.number().integer().min(1000000000).max(9999999999).required(),
+    }),
+});
+
+const [email, emailAttrs] = defineField('email');
+const [password, passwordAttrs] = defineField('password');
+const [phone, phoneAttrs] = defineField('phone');
+const [firstName, firstNameAttrs] = defineField('firstName');
+const [lastName, lastNameAttrs] = defineField('lastName');
+
+
+const emailFieldBorderColor = ref('rgb(134, 211, 66)');
+const passwordFieldBorderColor = ref('rgb(134, 211, 66)');
+const firstNameFieldBorderColor = ref('rgb(134, 211, 66)');
+const lastNameFieldBorderColor = ref('rgb(134, 211, 66)');
+const phoneFieldBorderColor = ref('rgb(134, 211, 66)');
 
 const busOwnersDetails = ref([]);
 const switchDiv = ref('');
@@ -15,13 +39,38 @@ const busOwnerListBgColor = ref('rgb(134, 211, 66)');
 const createBusOwnerBgColor = ref('');
 const busList = 'list_bus';
 const createBus = 'create_bus';
-const createBusOwnerRequest = {
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    password: ''
+
+let error = ref(errors);
+watch(error, () => {
+    changeInputBorderColor(errors.value.password, passwordFieldBorderColor);
+    changeInputBorderColor(errors.value.email, emailFieldBorderColor);
+    changeInputBorderColor(errors.value.firstName, firstNameFieldBorderColor);
+    changeInputBorderColor(errors.value.lastName, lastNameFieldBorderColor);
+    changeInputBorderColor(errors.value.phone, phoneFieldBorderColor);
+})
+
+const changeInputBorderColor = (value, variable) => {
+    if (typeof value !== 'undefined') {
+        variable.value = 'rgb(211, 66, 66)';
+    } else {
+        variable.value = 'rgb(134, 211, 66)';
+    }
 }
+
+const clearFormFields = () => {
+    // email.value = ''
+    // password.value = ''
+    // phone.value = ''
+    // firstName.value = ''
+    // lastName.value = ''
+    // emailFieldBorderColor.value = 'rgb(134, 211, 66)';
+    // passwordFieldBorderColor.value = 'rgb(134, 211, 66)';
+    // firstNameFieldBorderColor.value = 'rgb(134, 211, 66)';
+    // lastNameFieldBorderColor.value = 'rgb(134, 211, 66)';
+    // phoneFieldBorderColor.value = 'rgb(134, 211, 66)';
+}
+
+
 
 const getAllBusOwners = () => {
     axios.get(constant.ADMIN_GET_BUS_OWNERS).then((response) => {
@@ -67,22 +116,34 @@ const deleteBusOwner = (id) => {
     }
 }
 
-const createBusOnwer = () => {
-    axios.post(constant.ADMIN_CREATE_BUS_OWNER, createBusOwnerRequest).then((response) => {
-        if (response.status === 200) {
-            toast.success("Bus owner created.")
-            switchAdminHomeBody(busList);
-            getAllBusOwners();
-            for (let key in createBusOwnerRequest) {
-                createBusOwnerRequest[key] = '';
+const createBusOnwer = async () => {
+
+    const isValidForm = await validate();
+    if (isValidForm.valid) {
+        axios.post(constant.ADMIN_CREATE_BUS_OWNER, {
+            firstName: firstName.value,
+            lastName: lastName.value,
+            phone: phone.value,
+            email: email.value,
+            password: password.value
+        }).then((response) => {
+            if (response.status === 200) {
+                toast.success("Bus owner created.")
+                switchAdminHomeBody(busList);
+                getAllBusOwners();
+                clearFormFields();
+            } else {
+                toast.warning('Something went wrong')
             }
-        } else {
-            toast.warning('Something went wrong')
-        }
-    }).catch((error) => {
-        toast.error('Bus owner already exists.')
-        console.error(error);
-    });
+        }).catch((error) => {
+            toast.error('Bus owner already exists.')
+            console.error(error);
+        });
+    } else {
+        toast.error('Fill the fields.')
+    }
+
+
 }
 
 getAllBusOwners();
@@ -147,28 +208,34 @@ getAllBusOwners();
                 <div class="input-container">
                     <div class="input-box">
                         <div class="input">
-                            <label class="input-text">First name</label>
-                            <input v-model="createBusOwnerRequest.firstName" class="input-field" type="text">
+                            <label :style="{ color: firstNameFieldBorderColor }" class="input-text">First
+                                name</label>
+                            <input :style="{ borderColor: firstNameFieldBorderColor }" v-model="firstName"
+                                v-bind="firstNameAttrs" class="input-field" type="text">
                         </div>
                         <div class="input">
-                            <label class="input-text">Last name</label>
-                            <input v-model="createBusOwnerRequest.lastName" class="input-field" type="text">
-                        </div>
-                    </div>
-                    <div class="input-box">
-                        <div class="input">
-                            <label class="input-text">Phone</label>
-                            <input v-model="createBusOwnerRequest.phone" class="input-field" type="text">
-                        </div>
-                        <div class="input">
-                            <label class="input-text">Email</label>
-                            <input v-model="createBusOwnerRequest.email" class="input-field" type="email">
+                            <label :style="{ color: lastNameFieldBorderColor }" class="input-text">Last name</label>
+                            <input :style="{ borderColor: lastNameFieldBorderColor }" v-model="lastName"
+                                v-bind="lastNameAttrs" class="input-field" type="text">
                         </div>
                     </div>
                     <div class="input-box">
                         <div class="input">
-                            <label class="input-text">Password</label>
-                            <input v-model="createBusOwnerRequest.password" class="input-field" type="password">
+                            <label :style="{ color: phoneFieldBorderColor }" class="input-text">Phone</label>
+                            <input :style="{ borderColor: phoneFieldBorderColor }" v-model="phone" v-bind="phoneAttrs"
+                                class="input-field" type="text">
+                        </div>
+                        <div class="input">
+                            <label :style="{ color: emailFieldBorderColor }" class="input-text">Email</label>
+                            <input :style="{ borderColor: emailFieldBorderColor }" v-model="email" v-bind="emailAttrs"
+                                class="input-field" type="text">
+                        </div>
+                    </div>
+                    <div class="input-box">
+                        <div class="input">
+                            <label :style="{ color: passwordFieldBorderColor }" class="input-text">Password</label>
+                            <input :style="{ borderColor: passwordFieldBorderColor }" v-model="password"
+                                v-bind="passwordAttrs" class="input-field" type="password">
                         </div>
                         <div class="btn-container">
                             <button @click="createBusOnwer()" class="login-btn">Create</button>
@@ -197,7 +264,7 @@ td {
 
 .empty-text {
     font-size: 40px;
-    padding-top: 160px;
+    padding-top: 200px;
 }
 
 .list-container {
@@ -232,14 +299,14 @@ td {
 
 .list-body {
     width: 90%;
-    height: 470px;
+    height: 570px;
     background-color: #fff;
     border-radius: 5px;
 }
 
 .form-body {
     width: 90%;
-    height: 470px;
+    height: 570px;
     background-color: #fff;
     display: flex;
     align-items: center;
@@ -331,7 +398,7 @@ td {
 .input-field {
     width: 400px;
     height: 50px;
-    border: 1px solid rgb(134, 211, 66);
+    border: 1px solid;
     outline: none;
     border-radius: 6px;
     padding-left: 20px;

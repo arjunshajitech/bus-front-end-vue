@@ -5,19 +5,16 @@ import constant from '../../constant/Const'
 import { useRouter } from 'vue-router';
 import toast from '../../toast/toast'
 import { useForm } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/yup';
 import * as yup from 'yup';
 
 axios.defaults.withCredentials = true;
 const router = useRouter();
 
 const { errors, defineField, validate } = useForm({
-    validationSchema: toTypedSchema(
-        yup.object({
-            email: yup.string().email().required(),
-            password: yup.string().min(6).required(),
-        }),
-    ),
+    validationSchema: yup.object({
+        email: yup.string().email().required(),
+        password: yup.string().min(6).required(),
+    }),
 });
 
 const [email, emailAttrs] = defineField('email');
@@ -26,25 +23,18 @@ const [password, passwordAttrs] = defineField('password');
 const emailInputBorderColor = ref('rgb(134, 211, 66)');
 const passwordInputBorderColor = ref('rgb(134, 211, 66)');
 
-watch(email, () => {
-    if (typeof errors.value.email !== 'undefined') {
-        emailInputBorderColor.value = 'rgb(211, 66, 66)';
-    } else {
-        emailInputBorderColor.value = 'rgb(134, 211, 66)';
-    }
+let error = ref(errors);
+watch(error, () => {
+    changeInputBorderColor(errors.value.password,passwordInputBorderColor);
+    changeInputBorderColor(errors.value.email,emailInputBorderColor);
 })
 
-watch(password, () => {
-    if (typeof errors.value.password !== 'undefined') {
-        passwordInputBorderColor.value = 'rgb(211, 66, 66)';
+const changeInputBorderColor = (value, variable) => {
+    if (typeof value !== 'undefined') {
+        variable.value = 'rgb(211, 66, 66)';
     } else {
-        passwordInputBorderColor.value = 'rgb(134, 211, 66)';
+        variable.value = 'rgb(134, 211, 66)';
     }
-})
-
-const updateErrorBorderColor = () => {
-    passwordInputBorderColor.value = 'rgb(211, 66, 66)';
-    emailInputBorderColor.value = 'rgb(211, 66, 66)';
 }
 
 
@@ -70,7 +60,6 @@ const adminLogin = async () => {
         });
     } else {
         toast.error('Invalid email or password')
-        updateErrorBorderColor();
     }
 
 }

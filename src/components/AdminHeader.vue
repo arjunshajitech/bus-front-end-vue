@@ -59,7 +59,7 @@ checkAdminSession();
         <div class="navbar">
             <div class="nav">
                 <p class="nav-text">{{ adminName }}</p>
-                <p class="nav-text">Ente Bus App | Admin Panel</p>
+                <p class="nav-text">Travel Trace | Admin Panel</p>
                 <p class="nav-text" @click="adminLogout" v-if="showLogout">Logout</p>
             </div>
         </div>
