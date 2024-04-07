@@ -1,7 +1,72 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue';
+import axios from 'axios';
+import constant from '../../constant/Const'
+import { useRouter } from 'vue-router';
+import toast from '../../toast/toast'
+import { useForm } from 'vee-validate';
+import * as yup from 'yup';
 
-const currentDisplay = ref('bus')
+axios.defaults.withCredentials = true;
+const router = useRouter();
+
+const { errors, defineField, validate } = useForm({
+    validationSchema: yup.object({
+        busName: yup.string().min(4).required(),
+        registrationNumber: yup.string().min(6).required(),
+    }),
+    validationSchema: yup.object({
+        startLocation: yup.string().required(),
+        endLocation: yup.string().required(),
+        startTime: yup.string().required(),
+        endTime: yup.string().required(),
+        weekDay: yup.string().required(),
+        busId: yup.string().required(),
+    })
+});
+
+
+const [busName, busNameAttrs] = defineField('busName');
+const [registrationNumber, registrationNumberAttrs] = defineField('registrationNumber');
+const [startLocation, startLocationAttrs] = defineField('startLocation');
+const [endLocation, endLocationAttrs] = defineField('endLocation');
+const [busId, busIdAttrs] = defineField('busId');
+const [weekDay, weekDayAttrs] = defineField('weekDay');
+const [startTime, startTimeAttrs] = defineField('startTime');
+const [endTime, endTimeAttrs] = defineField('endTime');
+
+const busNameFieldBorderColor = ref('rgb(134, 211, 66)');
+const registrationNumberFieldBorderColor = ref('rgb(134, 211, 66)');
+const startLocationFieldBorderColor = ref('rgb(134, 211, 66)');
+const endLocationFieldBorderColor = ref('rgb(134, 211, 66)');
+const startTimeFieldBorderColor = ref('rgb(134, 211, 66)');
+const endTimeFieldBorderColor = ref('rgb(134, 211, 66)');
+const busIdFieldBorderColor = ref('rgb(134, 211, 66)');
+const weekDayFieldBorderColor = ref('rgb(134, 211, 66)');
+
+let error = ref(errors);
+watch(error, () => {
+    changeInputBorderColor(errors.value.busName, busNameFieldBorderColor);
+    changeInputBorderColor(errors.value.registrationNumber, registrationNumberFieldBorderColor);
+    changeInputBorderColor(errors.value.startLocation, startLocationFieldBorderColor);
+    changeInputBorderColor(errors.value.endLocation, registrationNumberFieldBorderColor);
+    changeInputBorderColor(errors.value.busId, busIdFieldBorderColor);
+    changeInputBorderColor(errors.value.weekDay, weekDayFieldBorderColor);
+    changeInputBorderColor(errors.value.startTime, startTimeFieldBorderColor);
+    changeInputBorderColor(errors.value.endTime, endTimeFieldBorderColor);
+})
+
+const changeInputBorderColor = (value, variable) => {
+    if (typeof value !== 'undefined') {
+        variable.value = 'rgb(211, 66, 66)';
+    } else {
+        variable.value = 'rgb(134, 211, 66)';
+    }
+}
+
+
+const currentDisplay = ref('buses');
+
 const bgCreateBus = ref('rgb(134, 211, 66)');
 const bgCreateRoute = ref('');
 const bgCreateSubRoute = ref('');
@@ -9,59 +74,215 @@ const bgListBus = ref('');
 const bgListRoute = ref('');
 const bgListSubRoute = ref('');
 
+const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+const timeOptions = ref([]);
+const locations = ref([]);
+const startLocationDropDown = ref(false);
+const endLocationDropDown = ref(false);
+const busDetails = ref([]);
+const routeDetals = ref([]);
+
+
 
 
 const switchBody = (val) => {
-    if (val === 'bus') {
-        bgCreateBus.value = 'rgb(134, 211, 66)';
-        bgCreateRoute.value = '';
-        bgCreateSubRoute.value = '';
-        bgListBus.value = '';
-        bgListRoute.value = '';
-        bgListSubRoute.value = '';
-        currentDisplay.value = 'bus'
-    } else if (val === 'route') {
-        bgCreateBus.value = '';
-        bgCreateRoute.value = 'rgb(134, 211, 66)';
-        bgCreateSubRoute.value = '';
-        bgListBus.value = '';
-        bgListRoute.value = '';
-        bgListSubRoute.value = '';
-        currentDisplay.value = 'route'
-    } else if (val === 'sub-route') {
-        bgCreateBus.value = '';
-        bgCreateRoute.value = '';
-        bgCreateSubRoute.value = 'rgb(134, 211, 66)';
-        bgListBus.value = '';
-        bgListRoute.value = '';
-        bgListSubRoute.value = '';
-        currentDisplay.value = 'sub-route'
-    } else if (val === 'list-bus') {
-        bgCreateBus.value = '';
-        bgCreateRoute.value = '';
-        bgCreateSubRoute.value = '';
-        bgListBus.value = 'rgb(134, 211, 66)';
-        bgListRoute.value = '';
-        bgListSubRoute.value = '';
-        currentDisplay.value = 'list-bus'
-    } else if (val === 'list-route') {
-        bgCreateBus.value = '';
-        bgCreateRoute.value = '';
-        bgCreateSubRoute.value = '';
-        bgListBus.value = '';
-        bgListRoute.value = 'rgb(134, 211, 66)';
-        bgListSubRoute.value = '';
-        currentDisplay.value = 'list-route'
-    } else if (val === 'list-sub-route') {
-        bgCreateBus.value = '';
-        bgCreateRoute.value = '';
-        bgCreateSubRoute.value = '';
-        bgListBus.value = '';
-        bgListRoute.value = '';
-        bgListSubRoute.value = 'rgb(134, 211, 66)';
-        currentDisplay.value = 'list-sub-route'
+    bgCreateBus.value = '';
+    bgCreateRoute.value = '';
+    bgCreateSubRoute.value = '';
+    bgListBus.value = '';
+    bgListRoute.value = '';
+    bgListSubRoute.value = '';
+    switch (val) {
+        case 'buses':
+            bgCreateBus.value = 'rgb(134, 211, 66)';
+            getAllBuses();
+            break;
+        case 'routes':
+            bgCreateRoute.value = 'rgb(134, 211, 66)';
+            getAllRoutes();
+            break;
+        case 'sub_routes':
+            bgCreateSubRoute.value = 'rgb(134, 211, 66)';
+            currentDisplay.value = 'sub_routes';
+            break;
+        case 'create_bus':
+            bgListBus.value = 'rgb(134, 211, 66)';
+            currentDisplay.value = 'create_bus';
+            break;
+        case 'create_route':
+            bgListRoute.value = 'rgb(134, 211, 66)';
+            currentDisplay.value = 'create_route';
+            break;
+        case 'create_sub_route':
+            bgListSubRoute.value = 'rgb(134, 211, 66)';
+            currentDisplay.value = 'create_sub_route';
+            break;
+        default:
+            break;
     }
 }
+
+const handleChange = (status) => {
+    const emptyLocation = ["No Location found."]
+    if (status === 'startLocation') {
+        startLocationDropDown.value = true
+        const places = constant.LOCATIONS.filter(location => location.toLowerCase().includes(startLocation.value.toLowerCase()));
+        if (places.length > 0 && startLocation.value != '') locations.value = places
+        else locations.value = emptyLocation;
+    } else {
+        endLocationDropDown.value = true
+        const places = constant.LOCATIONS.filter(location => location.toLowerCase().includes(endLocation.value.toLowerCase()));
+        if (places.length > 0 && endLocation.value != '') locations.value = places
+        else locations.value = emptyLocation;
+    }
+}
+
+const updateStartLocationValue = (value) => {
+    startLocationDropDown.value = false;
+    startLocation.value = value;
+}
+
+const updateEndLocationValue = (value) => {
+    endLocationDropDown.value = false;
+    endLocation.value = value;
+}
+
+const getAllBuses = () => {
+    axios.get(constant.BUSOWNER_LIST_BUS).then((response) => {
+        if (response.status === 200) {
+            if (response.data.length > 0) {
+                currentDisplay.value = 'buses';
+                busDetails.value = response.data;
+            } else {
+                currentDisplay.value = 'no_data_found';
+            }
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+getAllBuses();
+
+const getAllRoutes = () => {
+    axios.get(constant.BUSOWNER_LIST_ROUTE).then((response) => {
+        if (response.status === 200) {
+            if (response.data.length > 0) {
+                currentDisplay.value = 'routes';
+                routeDetals.value = response.data;
+            } else {
+                currentDisplay.value = 'no_data_found';
+            }
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
+
+const createBus = async () => {
+    const isValidForm = await validate();
+    if (isValidForm.valid) {
+        axios.post(constant.BUSOWNER_CREATE_BUS, {
+            busName: busName.value,
+            registrationNumber: registrationNumber.value
+        }).then((response) => {
+            if (response.status === 200) {
+                toast.success("Bus created.")
+                switchBody('buses');
+                getAllBuses();
+            } else {
+                toast.warning('Something went wrong')
+            }
+        }).catch((error) => {
+            toast.error('Bus already exists.')
+            console.error(error);
+        });
+    } else {
+        toast.error('Fill the fields.')
+    }
+}
+
+const deleteBus = (id) => {
+    const confirmation = confirm('Are you sure you want to delete bus?');
+    if (confirmation) {
+        axios.delete(constant.BUSOWNER_DELETE_BUS + "/" + id).then((response) => {
+            if (response.status === 200) {
+                toast.success("Bus deleted.")
+                getAllBuses();
+            } else {
+                toast.warning('Something went wrong')
+            }
+        }).catch((error) => {
+            toast.warning('Something went wrong')
+            console.error(error);
+        });
+    }
+}
+
+const createRoutes = async () => {
+
+    const isValidForm = await routeValidate();
+    if (isValidForm.valid) {
+        axios.post(constant.BUSOWNER_CREATE_ROUTE, {
+            busId: busId.value,
+            startLocation: startLocation.value,
+            endLocation: endLocation.value,
+            startTime: startTime.value,
+            endTime: endTime.value,
+            day: weekDay.value
+        }).then((response) => {
+            if (response.status === 200) {
+                toast.success("Route created.")
+                switchBody('routes');
+                getAllRoutes();
+            } else {
+                toast.warning('Something went wrong')
+            }
+        }).catch((error) => {
+            toast.error('Route already exists.')
+            console.error(error);
+        });
+    } else {
+        toast.error('Fill the fields.')
+    }
+
+
+}
+
+const deleteRoute = (id) => {
+    const confirmation = confirm('Are you sure you want to delete route?');
+    if (confirmation) {
+        axios.delete(constant.BUSOWNER_DELETE_ROUTE + "/" + id).then((response) => {
+            if (response.status === 200) {
+                toast.success("Route deleted.")
+                getAllRoutes();
+            } else {
+                toast.warning('Something went wrong')
+            }
+        }).catch((error) => {
+            toast.warning('Something went wrong')
+            console.error(error);
+        });
+    }
+}
+
+for (let hour = 0; hour <= 23; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+        const time = new Date();
+        time.setHours(hour);
+        time.setMinutes(minute);
+        time.setSeconds(0);
+        const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const ampm = time.getHours() >= 12 ? 'PM' : 'AM';
+        const formattedValue = `${formattedTime}:${time.getSeconds() < 10 ? '0' : ''}${time.getSeconds()}`;
+        const timeObject = {
+            displayTime: `${formattedTime} ${ampm}`,
+            value: formattedValue
+        };
+        timeOptions.value.push(timeObject);
+    }
+}
+
 
 </script>
 
@@ -69,85 +290,103 @@ const switchBody = (val) => {
 
     <div class="nav-container">
         <div class="nav">
-            <button :style="{ backgroundColor: bgCreateBus }" @click="switchBody('bus')" class="login-btn btn">Create
+            <button :style="{ backgroundColor: bgCreateBus }" @click="switchBody('buses')"
+                class="login-btn btn">Buses</button>
+            <button :style="{ backgroundColor: bgCreateRoute }" @click="switchBody('routes')"
+                class="login-btn btn">Routes</button>
+            <button :style="{ backgroundColor: bgCreateSubRoute }" @click="switchBody('sub_routes')"
+                class="login-btn btn">Sub Routes</button>
+            <button :style="{ backgroundColor: bgListBus }" @click="switchBody('create_bus')"
+                class="login-btn btn">Create
                 Bus</button>
-            <button :style="{ backgroundColor: bgCreateRoute }" @click="switchBody('route')"
-                class="login-btn btn">Create Bus Route</button>
-            <button :style="{ backgroundColor: bgCreateSubRoute }" @click="switchBody('sub-route')"
-                class="login-btn btn">Create Bus Sub Routes</button>
-            <button :style="{ backgroundColor: bgListBus }" @click="switchBody('list-bus')" class="login-btn btn">List
-                Bus</button>
-            <button :style="{ backgroundColor: bgListRoute }" @click="switchBody('list-route')"
-                class="login-btn btn">List Routes</button>
-            <button :style="{ backgroundColor: bgListSubRoute }" @click="switchBody('list-sub-route')"
-                class="login-btn btn">List Sub Routes</button>
+            <button :style="{ backgroundColor: bgListRoute }" @click="switchBody('create_route')"
+                class="login-btn btn">Create Routes</button>
+            <button :style="{ backgroundColor: bgListSubRoute }" @click="switchBody('create_sub_route')"
+                class="login-btn btn">Create Sub Routes</button>
         </div>
     </div>
 
 
 
-    <div v-if="currentDisplay === 'bus'" class="form-container" id="create-bus">
+    <div v-if="currentDisplay === 'create_bus'" class="form-container" id="create-bus">
         <div class="form-body">
             <div class="login-container">
                 <p class="login-text">Create Bus</p>
                 <div class="input-container">
 
                     <div class="input">
-                        <label class="input-text">Bus name</label>
-                        <input class="input-field" type="text">
+                        <label :style="{ color: busNameFieldBorderColor }" class="input-text">Bus name</label>
+                        <input v-model="busName" v-bind="busNameAttrs" :style="{ borderColor: busNameFieldBorderColor }"
+                            class="input-field" type="text">
                     </div>
                     <div class="input">
-                        <label class="input-text">Registration number</label>
-                        <input class="input-field" type="text">
+                        <label :style="{ color: registrationNumberFieldBorderColor }" class="input-text">Registration
+                            number</label>
+                        <input v-model="registrationNumber" v-bind="registrationNumberAttrs"
+                            :style="{ borderColor: registrationNumberFieldBorderColor }" class="input-field"
+                            type="text">
                     </div>
                     <div class="btn-container">
-                        <button class="login-btn">Create</button>
+                        <button @click="createBus()" class="login-btn">Create</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div  v-else-if="currentDisplay === 'route'" class="form-container" id="create-bus">
+    <div v-else-if="currentDisplay === 'create_route'" class="form-container" id="create-bus">
         <div class="form-body">
             <div class="login-container">
                 <p class="login-text">Create Route</p>
                 <div class="input-container">
-                    <select id="myDropdown">
+                    <select :style="{ borderColor: busIdFieldBorderColor }" v-model="busId" v-bind="busIdAttrs"
+                        id="myDropdown">
                         <option value="" disabled selected>Choose bus</option>
-                        <option value="option1">MONDAY</option>
-                        <option value="option2">TUESDAY</option>
-                        <option value="option3">WEDNESDAY</option>
-                        <option value="option1">THURSDAY</option>
-                        <option value="option2">FRIDAY</option>
-                        <option value="option3">SATURDAY</option>
-                        <option value="option1">SUNDAY</option>
+                        <option v-for="bus in busDetails" :value="bus.id">{{ bus.busName }}</option>
+                    </select>
+                    <select :style="{ borderColor: weekDayFieldBorderColor }" v-model="weekDay" v-bind="weekDayAttrs"
+                        id="myDropdown">
+                        <option value="" disabled selected>Choose day</option>
+                        <option v-for="day in daysOfWeek" :value="day">{{ day }}</option>
                     </select>
                     <div class="input">
-                        <label class="input-text">Start location</label>
-                        <input class="input-field" type="text">
+                        <label :style="{ color: startLocationFieldBorderColor }" class="input-text">Start
+                            location</label>
+                        <input :style="{ borderColor: startLocationFieldBorderColor }" class="input-field" type="text"
+                            @input="handleChange('startLocation')" v-model="startLocation" v-bind="startLocationAttrs">
+                        <ul v-if="startLocationDropDown" class="dropdown">
+                            <li v-for="location in locations" @click="updateStartLocationValue(location)">{{ location }}
+                            </li>
+                        </ul>
                     </div>
                     <div class="input">
-                        <label class="input-text">End location</label>
-                        <input class="input-field" type="text">
+                        <label :style="{ color: endLocationFieldBorderColor }" class="input-text">End location</label>
+                        <input :style="{ borderColor: endLocationFieldBorderColor }" class="input-field" type="text"
+                            @input="handleChange('endLocation')" v-model="endLocation" v-bind="endLocationAttrs">
+                        <ul v-if="endLocationDropDown" class="dropdown">
+                            <li v-for="location in locations" @click="updateEndLocationValue(location)">{{ location }}
+                            </li>
+                        </ul>
                     </div>
-                    <div class="input">
-                        <label class="input-text">Start time</label>
-                        <input class="input-field" type="text">
-                    </div>
-                    <div class="input">
-                        <label class="input-text">End Time</label>
-                        <input class="input-field" type="text">
-                    </div>
+                    <select :style="{ borderColor: startTimeFieldBorderColor }" v-model="startTime"
+                        v-bind="startTimeAttrs" id="myDropdown">
+                        <option value="" disabled selected>Start Time</option>
+                        <option v-for="time in timeOptions" :value="time.value">{{ time.displayTime }}</option>
+                    </select>
+                    <select :style="{ borderColor: endTimeFieldBorderColor }" v-model="endTime" v-bind="endTimeAttrs"
+                        id="myDropdown">
+                        <option value="" disabled selected>End Time</option>
+                        <option v-for="time in timeOptions" :value="time.value">{{ time.displayTime }}</option>
+                    </select>
                     <div class="btn-container">
-                        <button class="login-btn">Create</button>
+                        <button @click="createRoutes()" class="login-btn">Create</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div v-else-if="currentDisplay === 'sub-route'" class="form-container" id="create-bus">
+    <div v-else-if="currentDisplay === 'create_sub_route'" class="form-container" id="create-bus">
         <div class="form-body">
             <div class="login-container">
                 <p class="login-text">Create Sub Routes</p>
@@ -188,7 +427,7 @@ const switchBody = (val) => {
         </div>
     </div>
 
-    <div v-else-if="currentDisplay === 'list-bus'" class="form-container" id="create-bus">
+    <div v-else-if="currentDisplay === 'buses'" class="form-container" id="create-bus">
         <div class="list-body">
             <div class="list-container">
                 <table>
@@ -199,16 +438,11 @@ const switchBody = (val) => {
                             <th>DELETE</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody v-for="bus in busDetails">
                         <tr>
-                            <td>Arjun</td>
-                            <td>7788778877</td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-                            <td>Arjun</td>
-                            <td>7788778877</td>
-                            <td><button class="delete-btn">Delete</button></td>
+                            <td>{{ bus.busName }}</td>
+                            <td>{{ bus.registrationNumber }}</td>
+                            <td><button @click="deleteBus(bus.id)" class="delete-btn">Delete</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -216,7 +450,7 @@ const switchBody = (val) => {
         </div>
     </div>
 
-    <div v-else-if="currentDisplay === 'list-route'" class="form-container" id="create-bus">
+    <div v-else-if="currentDisplay === 'routes'" class="form-container" id="create-bus">
         <div class="list-body">
             <div class="list-container">
                 <table>
@@ -230,22 +464,14 @@ const switchBody = (val) => {
                             <th>DELETE</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody v-for="route in routeDetals">
                         <tr>
-                            <td>Arjun</td>
-                            <td>7788778877</td>
-                            <td>Arjun</td>
-                            <td>7788778877</td>
-                            <td>7788778877</td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-                            <td>Arjun</td>
-                            <td>7788778877</td>
-                            <td>Arjun</td>
-                            <td>7788778877</td>
-                            <td>7788778877</td>
-                            <td><button class="delete-btn">Delete</button></td>
+                            <td>{{ route.busName }}</td>
+                            <td>{{ route.startLocation }}</td>
+                            <td>{{ route.endLocation }}</td>
+                            <td>{{ route.startTime }}</td>
+                            <td>{{ route.endTime }}</td>
+                            <td><button @click="deleteRoute(route.id)" class="delete-btn">Delete</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -253,7 +479,7 @@ const switchBody = (val) => {
         </div>
     </div>
 
-    <div v-else class="form-container" id="create-bus">
+    <div v-else-if="currentDisplay == 'sub_routes'" class="form-container" id="create-bus">
         <div class="list-body">
             <div class="list-container">
                 <table>
@@ -287,6 +513,14 @@ const switchBody = (val) => {
         </div>
     </div>
 
+    <div v-else class="form-container" id="create-bus">
+        <div class="list-body">
+            <div class="list-container">
+                <p class="empty-text">No Details found!</p>
+            </div>
+        </div>
+    </div>
+
 </template>
 
 <style scoped>
@@ -297,6 +531,42 @@ th {
 
 td {
     padding: 20px 60px 10px 60px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dropdown {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-top: none;
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    z-index: 1;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.dropdown li {
+    padding: 5px;
+    cursor: pointer;
+}
+
+.dropdown li:hover {
+    background-color: #f0f0f0;
+}
+
+
+
+.empty-text {
+    font-size: 40px;
+    padding-top: 200px;
 }
 
 .list-container {
@@ -331,14 +601,14 @@ td {
 
 .list-body {
     width: 90%;
-    height: 470px;
+    height: 570px;
     background-color: #fff;
     border-radius: 5px;
 }
 
 .form-body {
     width: 90%;
-    height: 500px;
+    height: 570px;
     background-color: #fff;
     display: flex;
     align-items: center;
@@ -434,7 +704,7 @@ td {
     outline: none;
     border-radius: 6px;
     padding-left: 20px;
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .input {
@@ -471,6 +741,7 @@ select {
     font-size: 15px;
     font-weight: bold;
     padding-left: 10px;
+    overflow-y: auto;
 }
 
 option {

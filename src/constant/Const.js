@@ -13,6 +13,26 @@ const ADMIN_CREATE_BUS_OWNER = BASE_URL + "/admin/bus/owner";
 const BUSOWNER_LOGIN_URL = BASE_URL + "/busowner/login";
 const BUSOWNER_PROFILE = BASE_URL + "/busowner/me";
 const BUSOWNER_LOGOUT = BASE_URL + "/busowner/logout";
+const BUSOWNER_CREATE_BUS = BASE_URL + "/busowner/bus";
+const BUSOWNER_LIST_BUS = BASE_URL + "/busowner/bus";
+const BUSOWNER_DELETE_BUS = BASE_URL + "/busowner/bus";
+const BUSOWNER_CREATE_ROUTE = BASE_URL + "/busowner/routes";
+const BUSOWNER_LIST_ROUTE = BASE_URL + "/busowner/routes";
+const BUSOWNER_DELETE_ROUTE = BASE_URL + "/busowner/routes";
+
+
+const LOCATIONS = [
+    "Aryakara, Alappuzha",
+    "Muhamma, Alappuzha",
+    "Kavungal, Alappuzha",
+    "Thampakachuvad, Alappuzha",
+    "Rodumuku, Alappuzha",
+    "Komalapuram, Alappuzha",
+    "Thalavady, Alappuzha",
+    "Arayd, Alappuzha",
+    "Kalath, Alappuzha",
+    "Mulakkal, Alappuzha"
+]
 
 
 
@@ -29,5 +49,14 @@ export default {
 
     BUSOWNER_LOGIN_URL,
     BUSOWNER_PROFILE,
-    BUSOWNER_LOGOUT
-};
+    BUSOWNER_LOGOUT,
+    BUSOWNER_CREATE_BUS,
+    BUSOWNER_LIST_BUS,
+    BUSOWNER_DELETE_BUS,
+    BUSOWNER_CREATE_ROUTE,
+    BUSOWNER_LIST_ROUTE,
+    BUSOWNER_DELETE_ROUTE,
+
+
+    LOCATIONS
+}

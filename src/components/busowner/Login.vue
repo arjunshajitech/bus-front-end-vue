@@ -3,34 +3,69 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import constant from '../../constant/Const'
 import { useRouter } from 'vue-router';
+import toast from '../../toast/toast'
+import { useForm } from 'vee-validate';
+import * as yup from 'yup';
 
 axios.defaults.withCredentials = true;
 const router = useRouter();
 
-const busownerLoginRequest = {
-    emailOrPhone: '',
-    password: ''
+const { errors, defineField, validate } = useForm({
+    validationSchema: yup.object({
+        email: yup.string().email().required(),
+        password: yup.string().min(6).required(),
+    }),
+});
+
+const [email, emailAttrs] = defineField('email');
+const [password, passwordAttrs] = defineField('password');
+
+const emailInputBorderColor = ref('rgb(134, 211, 66)');
+const passwordInputBorderColor = ref('rgb(134, 211, 66)');
+
+let error = ref(errors);
+watch(error, () => {
+    changeInputBorderColor(errors.value.password, passwordInputBorderColor);
+    changeInputBorderColor(errors.value.email, emailInputBorderColor);
+})
+
+const changeInputBorderColor = (value, variable) => {
+    if (typeof value !== 'undefined') {
+        variable.value = 'rgb(211, 66, 66)';
+    } else {
+        variable.value = 'rgb(134, 211, 66)';
+    }
 }
 
-const busOwnerLogin = () => {
+const busOwnerLogin = async () => {
 
-    axios.post(constant.BUSOWNER_LOGIN_URL, busownerLoginRequest).then((response) => {
-        if (response.status === 200) {
-            // tosat
-            router.push('/busowner/home');
-        } else {
-            // toast
-        }
+    const isFormValid = await validate();
+    if (isFormValid.valid) {
+        axios.post(constant.BUSOWNER_LOGIN_URL, {
+            emailOrPhone: email.value,
+            password: password.value
+        }).then((response) => {
+            if (response.status === 200) {
+                toast.success('Login Success.')
+                router.push('/busowner/home');
+            } else {
+                toast.warning('Something went wrong')
+            }
 
-    }).catch((error) => {
-        // toast
-        router.push('/busowner');
-        console.error(error);
-    });
+        }).catch((error) => {
+            toast.error('Incorrect email or password.')
+            router.push('/busowner');
+            console.error(error);
+        });
+    } else {
+        toast.error('Invalid email or password')
+    }
+
+
 }
 
 const adminLogout = () => {
-    axios.get(constant.BUSOWNER_LOGOUT).then((response) => {
+    axios.get(constant.BUSOWNER_LOGOUT).then(() => {
     }).catch((error) => {
         console.error(error);
     });
@@ -49,12 +84,14 @@ adminLogout();
                 <p class="login-text">Bus Owner Login</p>
                 <div class="input-container">
                     <div class="input">
-                        <label class="input-text">Email</label>
-                        <input class="input-field" v-model="busownerLoginRequest.emailOrPhone" type="email">
+                        <label :style="{ color: emailInputBorderColor }" class="input-text">Email</label>
+                        <input :style="{ borderColor: emailInputBorderColor }" class="input-field" v-model="email"
+                            v-bind="emailAttrs" type="text">
                     </div>
                     <div class="input">
-                        <label class="input-text">Password</label>
-                        <input v-model="busownerLoginRequest.password" class="input-field" type="password">
+                        <label :style="{ color: passwordInputBorderColor }" class="input-text">Password</label>
+                        <input :style="{ borderColor: passwordInputBorderColor }" v-model="password" class="input-field"
+                            v-bind="passwordAttrs" type="password">
                     </div>
                 </div>
                 <div class="btn-container">

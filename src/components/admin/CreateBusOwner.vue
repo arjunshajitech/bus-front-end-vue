@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import constant from '../../constant/Const'
 import { useRouter } from 'vue-router';
@@ -20,19 +20,6 @@ const { errors, defineField, validate } = useForm({
     }),
 });
 
-const [email, emailAttrs] = defineField('email');
-const [password, passwordAttrs] = defineField('password');
-const [phone, phoneAttrs] = defineField('phone');
-const [firstName, firstNameAttrs] = defineField('firstName');
-const [lastName, lastNameAttrs] = defineField('lastName');
-
-
-const emailFieldBorderColor = ref('rgb(134, 211, 66)');
-const passwordFieldBorderColor = ref('rgb(134, 211, 66)');
-const firstNameFieldBorderColor = ref('rgb(134, 211, 66)');
-const lastNameFieldBorderColor = ref('rgb(134, 211, 66)');
-const phoneFieldBorderColor = ref('rgb(134, 211, 66)');
-
 const busOwnersDetails = ref([]);
 const switchDiv = ref('');
 const busOwnerListBgColor = ref('rgb(134, 211, 66)');
@@ -40,52 +27,30 @@ const createBusOwnerBgColor = ref('');
 const busList = 'list_bus';
 const createBus = 'create_bus';
 
-let error = ref(errors);
-watch(error, () => {
-    changeInputBorderColor(errors.value.password, passwordFieldBorderColor);
-    changeInputBorderColor(errors.value.email, emailFieldBorderColor);
-    changeInputBorderColor(errors.value.firstName, firstNameFieldBorderColor);
-    changeInputBorderColor(errors.value.lastName, lastNameFieldBorderColor);
-    changeInputBorderColor(errors.value.phone, phoneFieldBorderColor);
-})
+const [email, emailAttrs] = defineField('email');
+const [password, passwordAttrs] = defineField('password');
+const [phone, phoneAttrs] = defineField('phone');
+const [firstName, firstNameAttrs] = defineField('firstName');
+const [lastName, lastNameAttrs] = defineField('lastName');
 
-const changeInputBorderColor = (value, variable) => {
-    if (typeof value !== 'undefined') {
-        variable.value = 'rgb(211, 66, 66)';
-    } else {
-        variable.value = 'rgb(134, 211, 66)';
-    }
-}
+const getFieldBorderColor = (value, error) => {
+    return value ? (error ? 'rgb(211, 66, 66)' : 'rgb(134, 211, 66)') : 'rgb(134, 211, 66)';
+};
+
+const emailFieldBorderColor = computed(() => getFieldBorderColor(email.value, errors.value.email));
+const passwordFieldBorderColor = computed(() => getFieldBorderColor(password.value, errors.value.password));
+const firstNameFieldBorderColor = computed(() => getFieldBorderColor(firstName.value, errors.value.firstName));
+const lastNameFieldBorderColor = computed(() => getFieldBorderColor(lastName.value, errors.value.lastName));
+const phoneFieldBorderColor = computed(() => getFieldBorderColor(phone.value, errors.value.phone));
+
 
 const clearFormFields = () => {
-    // email.value = ''
-    // password.value = ''
-    // phone.value = ''
-    // firstName.value = ''
-    // lastName.value = ''
-    // emailFieldBorderColor.value = 'rgb(134, 211, 66)';
-    // passwordFieldBorderColor.value = 'rgb(134, 211, 66)';
-    // firstNameFieldBorderColor.value = 'rgb(134, 211, 66)';
-    // lastNameFieldBorderColor.value = 'rgb(134, 211, 66)';
-    // phoneFieldBorderColor.value = 'rgb(134, 211, 66)';
-}
-
-
-
-const getAllBusOwners = () => {
-    axios.get(constant.ADMIN_GET_BUS_OWNERS).then((response) => {
-        if (response.status === 200) {
-            if (response.data.length > 0) {
-                switchDiv.value = 'show_bus_owners';
-                busOwnersDetails.value = response.data;
-            } else {
-                switchDiv.value = 'no_data_found';
-            }
-        }
-    }).catch((error) => {
-        console.error(error);
-    });
-}
+    email.value = '';
+    password.value = '';
+    phone.value = '';
+    firstName.value = '';
+    lastName.value = '';
+};
 
 const switchAdminHomeBody = (status) => {
     if (status === busList) {
@@ -99,6 +64,21 @@ const switchAdminHomeBody = (status) => {
     }
 }
 
+
+const getAllBusOwners = () => {
+    axios.get(constant.ADMIN_GET_BUS_OWNERS).then((response) => {
+        if (response.status === 200) {
+            if (response.data.length > 0) {
+                switchDiv.value = 'show_bus_owners';
+                busOwnersDetails.value = response.data;
+            }
+        }
+    }).catch((error) => {
+        toast.warning('Something went wrong')
+        console.error(error);
+    });
+}
+
 const deleteBusOwner = (id) => {
     const confirmation = confirm('Are you sure you want to delete bus owner?');
     if (confirmation) {
@@ -106,8 +86,6 @@ const deleteBusOwner = (id) => {
             if (response.status === 200) {
                 toast.success("Bus owner deleted.")
                 getAllBusOwners();
-            } else {
-                toast.warning('Something went wrong')
             }
         }).catch((error) => {
             toast.warning('Something went wrong')
@@ -132,8 +110,6 @@ const createBusOnwer = async () => {
                 switchAdminHomeBody(busList);
                 getAllBusOwners();
                 clearFormFields();
-            } else {
-                toast.warning('Something went wrong')
             }
         }).catch((error) => {
             toast.error('Bus owner already exists.')
@@ -165,7 +141,7 @@ getAllBusOwners();
     <div v-if="switchDiv == 'no_data_found'" class="form-container" id="create-bus">
         <div class="list-body">
             <div class="list-container">
-                <p class="empty-text">Bus Owners is Empty!</p>
+                <p class="empty-text">No Details found!</p>
             </div>
         </div>
     </div>

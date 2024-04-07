@@ -31,14 +31,11 @@ const checkAdminSession = () => {
 }
 
 const adminLogout = () => {
-
     axios.get(constant.ADMIN_LOGOUT).then((response) => {
         if (response.status === 200) {
             toast.success('Logout Success.')
             router.push('/admin');
-        } else {
-            toast.warning('Something went wrong')
-        }
+        } 
     }).catch((error) => {
         toast.warning('Something went wrong')
         console.error(error);
@@ -46,7 +43,6 @@ const adminLogout = () => {
 }
 
 checkAdminSession();
-
 
 </script>
 
